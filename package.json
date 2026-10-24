@@ -1,0 +1,21 @@
+{
+  "name": "todo-list-gnome-extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development tooling for the To-Do List for Joplin GNOME Shell extension",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "test": "TZ=Europe/Zurich node --test 'tests/unit/*.test.js'",
+    "test:gjs": "tests/run-gjs.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

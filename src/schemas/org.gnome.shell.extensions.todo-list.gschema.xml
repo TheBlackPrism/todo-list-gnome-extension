@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="todo-list@theblackprism.ch">
+  <schema id="org.gnome.shell.extensions.todo-list" path="/org/gnome/shell/extensions/todo-list/">
+    <key name="joplin-url" type="s">
+      <default>'http://127.0.0.1:41184'</default>
+      <summary>Joplin Data API address</summary>
+      <description>Base URL of the Joplin Web Clipper service.</description>
+    </key>
+    <key name="joplin-token" type="s">
+      <default>''</default>
+      <summary>Joplin authorisation token</summary>
+      <description>Token for the Joplin Data API. Found in Joplin under Tools › Options › Web Clipper › Advanced options.</description>
+    </key>
+    <key name="notebook-id" type="s">
+      <default>''</default>
+      <summary>Joplin notebook to sync with</summary>
+      <description>ID of the notebook whose to-dos are shown. When empty, a top-level notebook called “Todos” is used, and created if needed.</description>
+    </key>
+    <key name="sync-enabled" type="b">
+      <default>true</default>
+      <summary>Sync with Joplin</summary>
+    </key>
+    <key name="sync-interval" type="i">
+      <range min="1" max="120"/>
+      <default>5</default>
+      <summary>Minutes between automatic syncs</summary>
+    </key>
+    <key name="show-count" type="b">
+      <default>true</default>
+      <summary>Show the number of open to-dos in the top bar</summary>
+    </key>
+  </schema>
+</schemalist>
