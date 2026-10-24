@@ -176,6 +176,8 @@ class TodoDialog extends ModalDialog.ModalDialog {
         const text = this._descriptionEntry.clutter_text;
         text.single_line_mode = false;
         text.line_wrap = true;
+        text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
+
         // St.Entry centres its text vertically, so the box gets its height
         // from the text itself: room for a few lines, starting at the top.
         text.y_align = Clutter.ActorAlign.START;
@@ -184,7 +186,7 @@ class TodoDialog extends ModalDialog.ModalDialog {
             const [, logical] = layout.get_pixel_extents();
             text.min_height = DESCRIPTION_LINES * logical.height / Math.max(1, layout.get_line_count());
         });
-        text.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
+
         // Return inserts a newline. Mutter 51 no longer does that by itself,
         // and it must not reach the dialog's default button either.
         text.activatable = false;

@@ -178,6 +178,14 @@ export async function run() {
         .every(title => shown().includes(title)), 'the menu to show the to-dos');
     await screenshot('menu');
 
+    // The same menu with the light style.
+    const desktop = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
+    desktop.set_string('color-scheme', 'prefer-light');
+    await Scripting.sleep(1500);
+    await screenshot('menu-light');
+    desktop.set_string('color-scheme', 'default');
+    await Scripting.sleep(1500);
+
     // The checkbox toggles completion and does not open the dialog.
     const rowOf = id => indicator._rows.find(candidate => candidate.itemId === id);
     await click(() => rowOf(added.id)?._check, 'the checkbox');
@@ -268,15 +276,16 @@ export async function run() {
     await screenshot('menu-after');
     panelIndicator.menu.close();
 
-    // The same menu with the light style.
-    const desktop = new Gio.Settings({schema_id: 'org.gnome.desktop.interface'});
-    desktop.set_string('color-scheme', 'prefer-light');
-    await Scripting.sleep(1500);
-    panelIndicator.menu.open();
-    await screenshot('menu-light');
-    panelIndicator.menu.close();
-    desktop.set_string('color-scheme', 'default');
-    await Scripting.sleep(1000);
+
+    if (JOPLIN_URL) {
+        // Back to the automatic notebook: the pending state goes to the old
+        // one first, then the list switches.
+        const before = ext._store.list.notebookId;
+        settings.set_string('notebook-id', '');
+        await waitFor(() => ext._store.list.notebookId !== before && ext._sync.status === 'ok',
+            'the switch to the automatic notebook', 30000);
+        check(true, 'switching to the automatic notebook');
+    }
 
     // The preferences open in their own process.
     extension().stateObj.openPreferences();
