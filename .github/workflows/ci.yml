@@ -50,7 +50,10 @@ jobs:
         run: tests/run-gjs.sh
       - name: Headless GNOME Shell smoke test
         run: |
-          # The shell wants a system bus, and shouldn't run as root.
+          # Without logind in the container, the shell must not look for it:
+          # it does whenever /run/systemd/seats exists.
+          rm -rf /run/systemd/seats
+          # It does want a system bus, and shouldn't run as root.
           mkdir -p /run/dbus
           dbus-daemon --system --fork
           useradd -m tester
