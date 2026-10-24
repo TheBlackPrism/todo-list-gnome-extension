@@ -1,6 +1,6 @@
 UUID := todo-list@theblackprism.ch
 SRC_DIR := src
-BUILD_DIR := build
+BUILD_DIR ?= build
 STAGE_DIR := $(BUILD_DIR)/stage
 ZIP := $(BUILD_DIR)/$(UUID).shell-extension.zip
 DATA_HOME := $(or $(XDG_DATA_HOME),$(HOME)/.local/share)

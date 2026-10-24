@@ -14,6 +14,13 @@ mount_chroot() {
         mkdir -p "$root/$dir"
         mountpoint -q "$root/$dir" || mount --bind "/$dir" "$root/$dir"
     done
+    # A fresh /run: no stale /run/systemd/seats, so the shell uses its dummy
+    # login manager instead of looking for logind.
+    mkdir -p "$root/run"
+    if ! mountpoint -q "$root/run"; then
+        mount -t tmpfs -o mode=755 tmpfs "$root/run"
+        mkdir -p "$root/run/dbus" "$root/run/lock"
+    fi
     mkdir -p "$root/work"
     if ! mountpoint -q "$root/work"; then
         mount --bind "$REPO_DIR" "$root/work"
@@ -25,7 +32,10 @@ mount_chroot() {
 umount_chroot() {
     local root=$1
     local dir
-    for dir in work dev/shm dev/pts dev sys proc; do
+    if [ -r "$root/run/dbus/pid" ]; then
+        kill "$(cat "$root/run/dbus/pid")" 2>/dev/null || true
+    fi
+    for dir in work run dev/shm dev/pts dev sys proc; do
         mountpoint -q "$root/$dir" && umount -l "$root/$dir"
     done
     return 0
@@ -41,6 +51,14 @@ in_chroot() {
         https_proxy="${https_proxy:-}" HTTPS_PROXY="${HTTPS_PROXY:-}" \
         no_proxy="${no_proxy:-}" NO_PROXY="${NO_PROXY:-}" \
         "$@"
+}
+
+# start_system_bus ROOT: GNOME Shell expects a system bus, even with no
+# services on it.
+start_system_bus() {
+    local root=$1
+    [ -S "$root/run/dbus/system_bus_socket" ] && return 0
+    in_chroot "$root" dbus-daemon --system --fork
 }
 
 # add_test_user ROOT: an unprivileged user, so the shell doesn't warn about root.

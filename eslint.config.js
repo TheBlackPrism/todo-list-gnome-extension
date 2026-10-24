@@ -32,7 +32,15 @@ export default [
             'semi': ['error', 'always'],
             'quotes': ['error', 'single', {avoidEscape: true, allowTemplateLiterals: true}],
             'comma-dangle': ['error', 'always-multiline'],
-            'indent': ['error', 4, {SwitchCase: 0}],
+            'indent': ['error', 4, {
+                SwitchCase: 0,
+                // As in GNOME Shell: the class passed to GObject.registerClass
+                // is not indented.
+                ignoredNodes: [
+                    'CallExpression[callee.object.name=GObject][callee.property.name=registerClass] > ClassExpression:first-child',
+                ],
+                MemberExpression: 'off',
+            }],
         },
     },
     {

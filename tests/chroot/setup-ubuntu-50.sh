@@ -27,7 +27,8 @@ fi
 in_chroot "$ROOT" apt-get update
 in_chroot "$ROOT" env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     ca-certificates gnome-shell gjs gir1.2-soup-3.0 xwayland dbus dbus-bin \
-    libglib2.0-bin make zip unzip
+    libglib2.0-bin make zip unzip \
+    libgtk-4-1 gir1.2-gtk-4.0 gir1.2-adw-1
 in_chroot "$ROOT" update-ca-certificates
 add_test_user "$ROOT"
 in_chroot "$ROOT" gnome-shell --version
