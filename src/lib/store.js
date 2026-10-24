@@ -10,7 +10,7 @@ import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import GObject from 'gi://GObject';
 
-import {FormatError, Origin, TodoList} from './todoList.js';
+import {FormatError, TodoList} from './todoList.js';
 
 export const FILE_NAME = 'todos.json';
 
@@ -220,5 +220,3 @@ export const TodoStore = GObject.registerClass({
         return this._loaded && !this._destroyed;
     }
 });
-
-export {Origin};
