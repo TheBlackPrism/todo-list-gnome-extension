@@ -20,6 +20,9 @@ const UUID = 'todo-list@theblackprism.ch';
 const OUTPUT = GLib.getenv('SMOKE_OUTPUT') ?? '/tmp';
 const JOPLIN_URL = GLib.getenv('SMOKE_JOPLIN_URL');
 const JOPLIN_TOKEN = GLib.getenv('SMOKE_JOPLIN_TOKEN');
+const JOPLIN_FAKE = GLib.getenv('SMOKE_JOPLIN_FAKE') ?? '';
+const [SCRIPT_PATH] = GLib.filename_from_uri(import.meta.url);
+const REPO = GLib.path_get_dirname(GLib.path_get_dirname(GLib.path_get_dirname(SCRIPT_PATH)));
 
 // Created in run(): the module is imported while the shell is still starting.
 let pointer = null;
@@ -75,6 +78,19 @@ async function press(keyval) {
     await Scripting.sleep(40);
     keyboard.notify_keyval(now(), keyval, Clutter.KeyState.RELEASED);
     await Scripting.sleep(150);
+}
+
+function communicate(proc) {
+    return new Promise((resolve, reject) => {
+        proc.communicate_utf8_async(null, null, (source, result) => {
+            try {
+                const [, stdout] = source.communicate_utf8_finish(result);
+                resolve(stdout ?? '');
+            } catch (error) {
+                reject(error);
+            }
+        });
+    });
 }
 
 async function screenshot(name) {
@@ -260,4 +276,32 @@ export async function run() {
     await screenshot('menu-light');
     panelIndicator.menu.close();
     desktop.set_string('color-scheme', 'default');
+    await Scripting.sleep(1000);
+
+    // The preferences open in their own process.
+    extension().stateObj.openPreferences();
+    const prefsWindow = () => global.display.list_all_windows()
+        .find(window => window.get_title()?.includes('To-Do List'));
+    await waitFor(prefsWindow, 'the preferences window', 30000);
+    await Scripting.sleep(3000);
+    await screenshot('prefs');
+    prefsWindow().delete(global.get_current_time());
+    await waitFor(() => !prefsWindow(), 'the preferences window to close');
+    check(true, 'the preferences window opens and closes');
+
+    if (JOPLIN_URL) {
+        // The preferences' behaviour, driven in a process of their own.
+        const launcher = new Gio.SubprocessLauncher({
+            flags: Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_MERGE,
+        });
+        for (const [name, value] of [['JOPLIN_URL', JOPLIN_URL], ['JOPLIN_TOKEN', JOPLIN_TOKEN],
+            ['JOPLIN_FAKE', JOPLIN_FAKE], ['SCHEMA_DIR', `${ext.path}/schemas`],
+            ['GSETTINGS_BACKEND', 'memory'], ['GSK_RENDERER', 'cairo']])
+            launcher.setenv(name, value, true);
+        const proc = launcher.spawnv(['gjs', '-m', `${REPO}/tests/gjs/prefs.test.js`]);
+        const output = await communicate(proc);
+        for (const line of output.trim().split('\n'))
+            console.log(`smoke: prefs: ${line}`);
+        check(proc.get_successful(), 'the preferences tests pass');
+    }
 }

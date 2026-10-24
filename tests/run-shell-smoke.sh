@@ -17,6 +17,21 @@ mkdir -m 700 "$XDG_RUNTIME_DIR"
 # Skips the one-time "screen lock disabled" notification of headless sessions.
 touch "$XDG_DATA_HOME/gnome-shell/lock-warning-shown"
 
+# Without a Joplin to talk to, start the fake one (needs Node).
+FAKE_PID=
+if [ -z "${SMOKE_JOPLIN_URL:-}" ] && command -v node > /dev/null; then
+    port_file=$SANDBOX/fake-port
+    node "$REPO/tests/helpers/fakeJoplinServer.js" --port 0 --token test-token > "$port_file" &
+    FAKE_PID=$!
+    for _ in $(seq 100); do
+        grep -q LISTENING "$port_file" && break
+        sleep 0.1
+    done
+    export SMOKE_JOPLIN_URL="http://127.0.0.1:$(awk '/LISTENING/ {print $2}' "$port_file")"
+    export SMOKE_JOPLIN_TOKEN=test-token SMOKE_JOPLIN_FAKE=1
+fi
+trap '[ -n "$FAKE_PID" ] && kill "$FAKE_PID" 2> /dev/null || true' EXIT
+
 export SMOKE_OUTPUT=${SMOKE_OUTPUT:-$SANDBOX/screenshots}
 mkdir -p "$SMOKE_OUTPUT"
 make -s -C "$REPO" install BUILD_DIR="$SANDBOX/build" > /dev/null
@@ -31,10 +46,41 @@ timeout "${SMOKE_TIMEOUT:-300}" dbus-run-session -- gnome-shell --headless --vir
     --automation-script "${SMOKE_SCRIPT:-$REPO/tests/shell/smoke.js}" > "$log" 2>&1 || status=$?
 
 grep -E 'smoke: ' "$log" | sed 's/^.*smoke: /  /' || true
-# GNOME Shell's own teardown after the script logs criticals; only check
-# what happened before it.
-if sed '/Shutting down GNOME Shell/q' "$log" |
-    grep -E 'JS ERROR|CRITICAL|Script failed|Extension failed'; then
+
+# Errors and criticals up to the shell's own teardown. One whose stack trace
+# lies entirely inside GNOME Shell (in this bare environment, e.g. the dash
+# missing app icons) is listed but doesn't fail the run; one that involves the
+# extension or the script, or has no stack trace at all, does.
+if ! awk '
+    function report() {
+        if (frames == 0 || ours) {
+            print "  ERROR: " block
+            failed = 1
+        } else {
+            print "  (GNOME Shell, not the extension) " block
+        }
+        block = ""
+    }
+    /Shutting down GNOME Shell/ { exit }
+    /JS ERROR|CRITICAL|Script failed|Extension failed/ {
+        if (block != "") report()
+        block = $0; frames = 0; ours = 0
+        next
+    }
+    block != "" && /^[ \t]*(Stack trace:)?[ \t]*$/ { next }
+    block != "" && /^[ \t]*[^ ]*@(resource|file):\/\// {
+        block = block "\n    " $0
+        frames++
+        if ($0 ~ /todo-list@theblackprism\.ch|smoke\.js/)
+            ours = 1
+        next
+    }
+    block != "" { report() }
+    END {
+        if (block != "")
+            report()
+        exit failed
+    }' "$log"; then
     echo "Errors in $log" >&2
     [ "$status" -eq 0 ] && status=1
 fi
