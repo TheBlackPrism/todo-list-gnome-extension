@@ -4,6 +4,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
+import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import {gettext as _, ngettext} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -26,6 +27,33 @@ const COMPLETED_SHOWN = 25;
 const REFRESH_SECONDS = 60;
 
 const NEEDS_SETUP = [SyncStatus.NOT_CONFIGURED, SyncStatus.AUTH_FAILED, SyncStatus.NOTEBOOK_MISSING];
+
+/** Joplin's launchers: distribution package, Flatpak, Snap, the official AppImage installer. */
+const JOPLIN_APP_IDS = [
+    'joplin.desktop',
+    'net.cozic.joplin_desktop.desktop',
+    'joplin-desktop_joplin-desktop.desktop',
+    'appimagekit-joplin.desktop',
+];
+
+/**
+ * @returns {Shell.App|null} the installed Joplin desktop app, if any
+ */
+function findJoplin() {
+    const appSystem = Shell.AppSystem.get_default();
+    for (const id of JOPLIN_APP_IDS) {
+        const app = appSystem.lookup_app(id);
+        if (app)
+            return app;
+    }
+    // Other packagings: any app that is called Joplin.
+    for (const id of Shell.AppSystem.search('joplin').flat()) {
+        const app = appSystem.lookup_app(id);
+        if (/^joplin\b/i.test(app?.get_name() ?? ''))
+            return app;
+    }
+    return null;
+}
 
 export const TodoIndicator = GObject.registerClass(
 class TodoIndicator extends PanelMenu.Button {
@@ -116,7 +144,25 @@ class TodoIndicator extends PanelMenu.Button {
         });
         this._syncButton.connect('clicked', () => this._sync.syncNow());
         header.add_child(this._syncButton);
+        // The icon is a background image from the stylesheet, which has a
+        // black one for the light style and a white one for the dark style.
+        this._joplinButton = new St.Button({
+            style_class: 'button todo-header-button',
+            child: new St.Bin({style_class: 'todo-joplin-icon'}),
+            accessible_name: _('Open Joplin'),
+            can_focus: true,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        this._joplinButton.connect('clicked', () => {
+            this.menu.close();
+            // Raises Joplin's window if it is running, starts it otherwise.
+            this._joplinApp?.activate();
+        });
+        header.add_child(this._joplinButton);
         this.menu.addMenuItem(header);
+        this._updateJoplin();
+        Shell.AppSystem.get_default().connectObject('installed-changed',
+            () => this._updateJoplin(), this);
 
         const add = new PopupMenu.PopupBaseMenuItem({
             activate: false,
@@ -258,6 +304,11 @@ class TodoIndicator extends PanelMenu.Button {
         this._syncButton.visible = status !== SyncStatus.NOT_CONFIGURED &&
             status !== SyncStatus.DISABLED;
         this._syncButton.reactive = status !== SyncStatus.SYNCING;
+    }
+
+    _updateJoplin() {
+        this._joplinApp = findJoplin();
+        this._joplinButton.visible = this._joplinApp !== null;
     }
 
     _onMenuOpened() {

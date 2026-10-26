@@ -26,6 +26,8 @@ sync with a [Joplin](https://joplinapp.org) notebook. Each to-do has a
   can be cleared in one go.
 - Two-way sync with one Joplin notebook. The list keeps working while Joplin is
   closed and catches up when it's back.
+- The Joplin button next to Sync Now opens Joplin, or brings its window to the
+  front if it is already running. It only shows when Joplin is installed.
 
 ## Requirements
 

@@ -16,6 +16,10 @@ mkdir -p "$HOME" "$XDG_DATA_HOME/gnome-shell" "$XDG_CONFIG_HOME" "$XDG_CACHE_HOM
 mkdir -m 700 "$XDG_RUNTIME_DIR"
 # Skips the one-time "screen lock disabled" notification of headless sessions.
 touch "$XDG_DATA_HOME/gnome-shell/lock-warning-shown"
+# A stand-in Joplin launcher, so the menu shows the Open Joplin button. The
+# script never really starts it.
+mkdir -p "$XDG_DATA_HOME/applications"
+printf '[Desktop Entry]\nType=Application\nName=Joplin\nExec=true\n' > "$XDG_DATA_HOME/applications/joplin.desktop"
 
 # Without a Joplin to talk to, start the fake one (needs Node).
 FAKE_PID=

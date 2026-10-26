@@ -186,6 +186,18 @@ export async function run() {
     desktop.set_string('color-scheme', 'default');
     await Scripting.sleep(1500);
 
+    // The Joplin button raises or starts Joplin and closes the menu.
+    check(indicator._joplinButton.visible, 'the menu has an Open Joplin button');
+    let activated = false;
+    indicator._joplinApp = {activate: () => (activated = true)};
+    await click(() => indicator._joplinButton, 'the Joplin button');
+    check(activated, 'the Joplin button activates Joplin');
+    check(!indicator.menu.isOpen, 'the Joplin button closes the menu');
+    indicator._updateJoplin();
+    indicator.menu.open();
+    await waitFor(() => indicator._entry.clutter_text.has_key_focus(),
+        'the entry to take key focus again', 3000);
+
     // The checkbox toggles completion and does not open the dialog.
     const rowOf = id => indicator._rows.find(candidate => candidate.itemId === id);
     await click(() => rowOf(added.id)?._check, 'the checkbox');
