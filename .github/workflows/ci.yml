@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-unit:
+    name: Lint and unit tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+  gnome-shell:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-24.04
+    container: ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: GNOME Shell 50 (Fedora 44)
+            image: registry.fedoraproject.org/fedora:44
+            install: >-
+              dnf install -y --setopt=install_weak_deps=False
+              gnome-shell gjs libsoup3 gtk4 libadwaita mesa-dri-drivers
+              xorg-x11-server-Xwayland dbus-daemon glib2 nodejs
+              make zip unzip gawk procps-ng util-linux findutils
+          - name: GNOME Shell 51 (Arch Linux)
+            image: archlinux:latest
+            install: >-
+              pacman -Syu --noconfirm --needed
+              gnome-shell gjs libsoup3 gtk4 libadwaita xorg-xwayland glib2 nodejs
+              make zip unzip
+    steps:
+      - name: Install GNOME Shell
+        run: ${{ matrix.install }}
+      - uses: actions/checkout@v4
+      - run: gnome-shell --version
+      - name: Check the settings schema
+        run: glib-compile-schemas --strict --dry-run src/schemas
+      - name: GJS tests (fake Joplin)
+        run: tests/run-gjs.sh
+      - name: Headless GNOME Shell smoke test
+        run: |
+          # Without logind in the container, the shell must not look for it:
+          # it does whenever /run/systemd/seats exists.
+          rm -rf /run/systemd/seats
+          # It does want a system bus, and shouldn't run as root.
+          mkdir -p /run/dbus
+          dbus-daemon --system --fork
+          useradd -m tester
+          chown -R tester .
+          runuser -u tester -- env SMOKE_OUTPUT="$PWD/smoke-output" tests/run-shell-smoke.sh
+      - name: Package
+        run: make pack
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.name }}
+          path: |
+            build/*.zip
+            smoke-output/
+          if-no-files-found: ignore

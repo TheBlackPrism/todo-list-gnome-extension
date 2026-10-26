@@ -1,0 +1,13 @@
+{
+  "uuid": "todo-list@theblackprism.ch",
+  "name": "To-Do List for Joplin",
+  "description": "A to-do list in the top bar. Each item has a title, an optional due date and an optional description. The list syncs both ways with a Joplin notebook through the Joplin Data API, the local service behind Joplin's Web Clipper.",
+  "shell-version": [
+    "50",
+    "51"
+  ],
+  "url": "https://github.com/TheBlackPrism/todo-list-gnome-extension",
+  "settings-schema": "org.gnome.shell.extensions.todo-list",
+  "gettext-domain": "todo-list@theblackprism.ch",
+  "version-name": "1.0"
+}

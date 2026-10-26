@@ -1,0 +1,83 @@
+/* GNOME Shell loads either stylesheet-dark.css or stylesheet-light.css, so
+ * each is complete; they differ only in the two colours at the top, which are
+ * the shell's own error and warning colours. */
+
+.todo-overdue { color: #ff7b63; }
+.todo-status-problem { color: #f8e45c; }
+.todo-dialog-time:error { color: #ff7b63; }
+
+.todo-count {
+  padding-left: 4px;
+  font-weight: bold;
+  font-feature-settings: "tnum";
+}
+
+.todo-header { spacing: 6px; }
+.todo-header-title { font-weight: bold; }
+.todo-header-status { font-size: smaller; }
+.todo-header-button,
+.todo-add-button {
+  padding: 6px;
+  border-radius: 999px;
+}
+.todo-header-button StLabel { padding: 0 6px; }
+.todo-header-button StIcon,
+.todo-add-button StIcon,
+.todo-dialog-clear StIcon { icon-size: 16px; }
+
+.todo-add { spacing: 6px; }
+.todo-add-entry { min-width: 20em; }
+
+.todo-list-scroll { max-height: 28em; }
+.todo-empty { font-style: italic; }
+
+.todo-row { spacing: 8px; }
+.todo-row-button {
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+.todo-row-button:focus { box-shadow: inset 0 0 0 2px -st-accent-color; }
+.todo-row-text {
+  spacing: 2px;
+  max-width: 24em;
+}
+.todo-row-done { text-decoration: line-through; }
+.todo-row-details {
+  spacing: 8px;
+  font-size: smaller;
+}
+
+.todo-dialog .message-dialog-content { spacing: 12px; }
+.todo-dialog-entry { min-width: 24em; }
+.todo-dialog-due,
+.todo-dialog-due-row,
+.todo-dialog-chips { spacing: 8px; }
+.todo-dialog-time {
+  min-width: 5.5em;
+  width: 5.5em;
+}
+.todo-dialog-clear { padding: 8px; }
+.todo-dialog-chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.todo-dialog-section { spacing: 6px; }
+.todo-dialog-label {
+  font-size: smaller;
+  font-weight: bold;
+  padding: 0 4px;
+}
+.todo-dialog-description-scroll { max-height: 12em; }
+
+/* Today is outlined; the chosen day is filled. */
+.todo-date-picker .calendar-day.calendar-today {
+  /* St only draws an inset shadow over a background. */
+  background-color: rgba(0, 0, 0, 0.01);
+  color: -st-accent-color !important;
+  box-shadow: inset 0 0 0 2px -st-accent-color;
+}
+.todo-date-picker .calendar-day:selected,
+.todo-date-picker .calendar-day.calendar-today:selected {
+  background-color: -st-accent-color;
+  color: -st-accent-fg-color !important;
+}
