@@ -201,6 +201,23 @@ export async function run() {
     check(dialog?._titleEntry?.text === 'Call the dentist', 'the row opens the edit dialog');
     check(!indicator.menu.isOpen, 'the menu closes behind the dialog');
 
+    // End of week picks the coming Friday (today on a Friday).
+    const chip = label => {
+        const actors = [dialog];
+        while (actors.length) {
+            const actor = actors.pop();
+            if (actor.style_class?.includes('todo-dialog-chip') && actor.label === label)
+                return actor;
+            actors.push(...actor.get_children());
+        }
+        return null;
+    };
+    await click(() => chip('End of week'), 'End of week');
+    const friday = new Date();
+    friday.setDate(friday.getDate() + (5 - friday.getDay() + 7) % 7);
+    check(dialog._date?.year === friday.getFullYear() && dialog._date.month === friday.getMonth() + 1 &&
+        dialog._date.day === friday.getDate(), `End of week sets the coming Friday (got ${JSON.stringify(dialog._date)})`);
+
     await click(() => dialog._dateButton, 'the date button');
     check(dialog._picker.visible, 'the date button shows the date picker');
     await screenshot('dialog');

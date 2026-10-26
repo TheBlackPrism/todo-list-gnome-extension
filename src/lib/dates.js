@@ -100,6 +100,14 @@ export function addDays(timestamp, days) {
 }
 
 /**
+ * @param {number} now
+ * @returns {number} calendar days from `now` to the coming Friday, 0 on a Friday
+ */
+export function daysUntilFriday(now) {
+    return (5 - new Date(now).getDay() + 7) % 7;
+}
+
+/**
  * Whole calendar days from `from` to `to` in local time, unaffected by DST.
  *
  * @param {number} from

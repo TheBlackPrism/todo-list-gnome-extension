@@ -18,9 +18,9 @@ sync with a [Joplin](https://joplinapp.org) notebook. Each to-do has a
 
 - Add a to-do straight from the menu: type a title and press Enter. The **+**
   button opens the full editor.
-- Due dates from a calendar or the Today / Tomorrow / Next week shortcuts, with
-  an optional time. Overdue items turn red, and the top bar shows how many are
-  open.
+- Due dates from a calendar or the Today / Tomorrow / End of week / Next week
+  shortcuts (End of week is the coming Friday), with an optional time. Overdue
+  items turn red, and the top bar shows how many are open.
 - Multi-line descriptions. They are the body of the Joplin note.
 - Tick a to-do off with its checkbox. Completed ones collect in a submenu, and
   can be cleared in one go.

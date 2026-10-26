@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-    DATE_ONLY_HOUR, addDays, compareOpen, composeDue, dayDifference, describeDue,
+    DATE_ONLY_HOUR, addDays, compareOpen, composeDue, dayDifference, daysUntilFriday, describeDue,
     formatTime, isDateOnly, isOverdue, parseTime, splitDue, startOfDay,
 } from '../../src/lib/dates.js';
 
@@ -52,6 +52,13 @@ test('day arithmetic ignores DST shifts', () => {
     assert.equal(dayDifference(at(2026, 10, 24), at(2026, 10, 23, 23, 59)), -1);
     assert.equal(new Date(addDays(at(2026, 10, 24, 9), 1)).getHours(), 9);
     assert.equal(startOfDay(at(2026, 10, 25, 15, 45)), at(2026, 10, 25));
+});
+
+test('end of week is the coming Friday, today on a Friday', () => {
+    // Monday 2026-10-26 to Sunday 2026-11-01.
+    const expected = [4, 3, 2, 1, 0, 6, 5];
+    expected.forEach((days, index) =>
+        assert.equal(daysUntilFriday(at(2026, 10, 26 + index, 23, 30)), days));
 });
 
 test('a date-only item is overdue only once its day has passed', () => {

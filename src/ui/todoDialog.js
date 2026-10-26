@@ -10,7 +10,7 @@ import * as Dialog from 'resource:///org/gnome/shell/ui/dialog.js';
 import * as ModalDialog from 'resource:///org/gnome/shell/ui/modalDialog.js';
 import * as ShellEntry from 'resource:///org/gnome/shell/ui/shellEntry.js';
 
-import {composeDue, formatTime, parseTime, splitDue} from '../lib/dates.js';
+import {composeDue, daysUntilFriday, formatTime, parseTime, splitDue} from '../lib/dates.js';
 import {DatePicker, todayParts} from './datePicker.js';
 import {formatDay} from './format.js';
 
@@ -167,9 +167,16 @@ class TodoDialog extends ModalDialog.ModalDialog {
         box.add_child(row);
 
         const chips = new St.BoxLayout({style_class: 'todo-dialog-chips'});
-        for (const [label, days] of [[_('Today'), 0], [_('Tomorrow'), 1], [_('Next week'), 7]]) {
+        // Counted when clicked, so a dialog left open past midnight still fits.
+        for (const [label, days] of [
+            [_('Today'), () => 0],
+            [_('Tomorrow'), () => 1],
+            /* Translators: sets the due date to the coming Friday */
+            [_('End of week'), () => daysUntilFriday(Date.now())],
+            [_('Next week'), () => 7],
+        ]) {
             const chip = new St.Button({style_class: 'button todo-dialog-chip', label, can_focus: true});
-            chip.connect('clicked', () => this._setDate(todayParts(days)));
+            chip.connect('clicked', () => this._setDate(todayParts(days())));
             chips.add_child(chip);
         }
         box.add_child(chips);
