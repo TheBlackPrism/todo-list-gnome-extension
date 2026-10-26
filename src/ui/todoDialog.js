@@ -18,10 +18,26 @@ const RETURN_KEYS = [Clutter.KEY_Return, Clutter.KEY_KP_Enter, Clutter.KEY_ISO_E
 const DESCRIPTION_LINES = 4;
 
 /**
+ * A click anywhere on the entry focuses its text. The text only takes clicks
+ * on what it has drawn (and on 51 none at all while read-only), and St.Entry
+ * no longer passes the rest on.
+ *
+ * @param {St.Entry} entry
+ */
+function focusOnClick(entry) {
+    const text = entry.clutter_text;
+    const click = new Clutter.ClickGesture();
+    click.connect('recognize', () => {
+        if (!text.has_key_focus())
+            text.grab_key_focus();
+    });
+    entry.add_action(click);
+}
+
+/**
  * Mutter (50 and 51) updates the input method's cursor when an editable text
  * is first drawn, even if it isn't focused, and that logs criticals. So the
- * entry is editable only while it has key focus. Tab still reaches it, and a
- * click on it (which a read-only text doesn't take on 51) passes the focus on.
+ * entry is editable only while it has key focus. Tab and clicks still reach it.
  *
  * @param {St.Entry} entry
  */
@@ -34,12 +50,7 @@ function editableWhileFocused(entry) {
     text.connect('key-focus-out', () => {
         text.editable = false;
     });
-    const click = new Clutter.ClickGesture();
-    click.connect('recognize', () => {
-        if (!text.has_key_focus())
-            text.grab_key_focus();
-    });
-    entry.add_action(click);
+    focusOnClick(entry);
 }
 
 export const TodoDialog = GObject.registerClass(
@@ -173,6 +184,8 @@ class TodoDialog extends ModalDialog.ModalDialog {
             x_expand: true,
         });
         ShellEntry.addContextMenu(this._descriptionEntry);
+        // Most of the box is below or beside the text.
+        focusOnClick(this._descriptionEntry);
         const text = this._descriptionEntry.clutter_text;
         text.single_line_mode = false;
         text.line_wrap = true;

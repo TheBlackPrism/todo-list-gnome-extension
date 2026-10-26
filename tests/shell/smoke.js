@@ -205,9 +205,12 @@ export async function run() {
     check(dialog._picker.visible, 'the date button shows the date picker');
     await screenshot('dialog');
 
-    // Return and keypad Enter insert newlines in the description and don't save.
-    dialog._descriptionEntry.grab_key_focus();
+    // A click in the description box, below its one line of text, focuses it.
+    await click(() => dialog._descriptionEntry, 'the description');
     const text = dialog._descriptionEntry.clutter_text;
+    check(text.has_key_focus(), 'a click below the text focuses the description');
+
+    // Return and keypad Enter insert newlines in the description and don't save.
     text.set_cursor_position(-1);
     await press(Clutter.KEY_Return);
     await press(Clutter.KEY_KP_Enter);
